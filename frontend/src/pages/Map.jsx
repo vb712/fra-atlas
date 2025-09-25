@@ -1,162 +1,196 @@
-import React, { useState, Suspense } from "react";
-const MapComponent = React.lazy(() => import("../components/MapComponent"));
+import React, { useState } from "react";
 
 export default function Map() {
   const [filters, setFilters] = useState({
-    region: "all",
+    state: "all",
+    district: "all",
     claimType: "all",
+    dateRange: "all",
     status: "all",
-    startDate: "",
-    endDate: "",
+    area: "all"
   });
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
-  const handleApplyFilters = () => {
-    // Implement filter logic here
-    console.log("Applied filters:", filters);
+  const handleReset = () => {
+    setFilters({
+      state: "all",
+      district: "all",
+      claimType: "all",
+      dateRange: "all",
+      status: "all",
+      area: "all"
+    });
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Interactive Map</h1>
-        <p className="text-gray-600">
-          Explore forest rights claims across different regions of India
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="px-6 py-4 bg-white shadow-sm border-b">
+        <h1 className="text-2xl font-semibold text-gray-800">Forest Rights Claims Map</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filters Panel */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Filters</h2>
-            
-            {/* Region Filter */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Region
-              </label>
-              <select 
-                name="region"
-                value={filters.region}
-                onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+      {/* Main Content */}
+      <div className="flex h-[calc(100vh-73px)]">
+        {/* Left Sidebar - Filters */}
+        <div className="w-80 bg-white border-r overflow-y-auto">
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+              <button 
+                onClick={handleReset}
+                className="text-sm text-blue-600 hover:text-blue-700"
               >
-                <option value="all">All Regions</option>
-                <option value="north">North India</option>
-                <option value="south">South India</option>
-                <option value="east">East India</option>
-                <option value="west">West India</option>
-                <option value="central">Central India</option>
+                Reset all
+              </button>
+            </div>
+
+            {/* State Filter */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                State
+              </label>
+              <select
+                name="state"
+                value={filters.state}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All States</option>
+                <option value="maharashtra">Maharashtra</option>
+                <option value="madhyaPradesh">Madhya Pradesh</option>
+                <option value="chhattisgarh">Chhattisgarh</option>
+                <option value="odisha">Odisha</option>
+              </select>
+            </div>
+
+            {/* District Filter */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                District
+              </label>
+              <select
+                name="district"
+                value={filters.district}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Districts</option>
+                <option value="gadchiroli">Gadchiroli</option>
+                <option value="chandrapur">Chandrapur</option>
+                <option value="gondia">Gondia</option>
               </select>
             </div>
 
             {/* Claim Type Filter */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Claim Type
               </label>
               <select
                 name="claimType"
                 value={filters.claimType}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">All Claims</option>
-                <option value="individual">Individual Claims</option>
-                <option value="community">Community Claims</option>
+                <option value="all">All Types</option>
+                <option value="individual">Individual</option>
+                <option value="community">Community</option>
+                <option value="habitat">Habitat</option>
+              </select>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date Range
+              </label>
+              <select
+                name="dateRange"
+                value={filters.dateRange}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Time</option>
+                <option value="last30">Last 30 Days</option>
+                <option value="last90">Last 90 Days</option>
+                <option value="lastYear">Last Year</option>
               </select>
             </div>
 
             {/* Status Filter */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
               <select
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Status</option>
-                <option value="approved">Approved</option>
                 <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
+                <option value="appeal">Under Appeal</option>
               </select>
             </div>
 
-            {/* Date Range Filter */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Range
+            {/* Area Range Filter */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Area Range (Hectares)
               </label>
-              <input
-                type="date"
-                name="startDate"
-                value={filters.startDate}
+              <select
+                name="area"
+                value={filters.area}
                 onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 bg-white"
-              />
-              <input
-                type="date"
-                name="endDate"
-                value={filters.endDate}
-                onChange={handleFilterChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-              />
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Sizes</option>
+                <option value="small">Small (0-2)</option>
+                <option value="medium">Medium (2-5)</option>
+                <option value="large">Large (5+)</option>
+              </select>
             </div>
 
-            <button 
-              onClick={handleApplyFilters}
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150"
+            <button
+              onClick={() => console.log("Applying filters:", filters)}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Apply Filters
             </button>
           </div>
-
-          {/* Legend */}
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Legend</h2>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                <span>Approved Claims</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
-                <span>Pending Claims</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                <span>Rejected Claims</span>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Map Container */}
-        <div className="lg:col-span-3">
-          <Suspense fallback={
-            <div className="h-[600px] rounded-lg overflow-hidden shadow-lg bg-gray-100 flex items-center justify-center">
-              <div className="text-gray-600">
-                <svg className="animate-spin h-8 w-8 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p>Loading map...</p>
-              </div>
+        {/* Right Side - Map Area */}
+        <div className="flex-1 bg-gray-100 p-6">
+          <div className="bg-white h-full rounded-lg shadow-sm border flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <svg 
+                className="w-16 h-16 mb-4 mx-auto text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                />
+              </svg>
+              <p className="text-xl font-medium mb-2">Map Placeholder</p>
+              <p className="text-sm">The interactive map will be displayed here</p>
             </div>
-          }>
-            <MapComponent />
-          </Suspense>
+          </div>
         </div>
       </div>
     </div>
