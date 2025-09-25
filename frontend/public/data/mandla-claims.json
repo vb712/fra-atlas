@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "id": "mandla-01",
     "featureId": "IND.19.27_1",
@@ -82,5 +82,47 @@
     "areaHectares": 12.4,
     "submissionDate": "2022-12-02",
     "households": 47
+  },
+  {
+    "id": "mandla-07",
+    "featureId": "IND.19.27_1",
+    "village": "Garra Sector",
+    "latitude": 22.5995,
+    "longitude": 80.3742,
+    "state": "madhyaPradesh",
+    "district": "mandla",
+    "claimType": "individual",
+    "status": "pending",
+    "areaHectares": 1.1,
+    "submissionDate": "2024-08-05",
+    "households": 19
+  },
+  {
+    "id": "mandla-08",
+    "featureId": "IND.19.27_1",
+    "village": "Garra Bazaar",
+    "latitude": 22.5998,
+    "longitude": 80.3749,
+    "state": "madhyaPradesh",
+    "district": "mandla",
+    "claimType": "individual",
+    "status": "approved",
+    "areaHectares": 0.7,
+    "submissionDate": "2024-08-12",
+    "households": 12
+  },
+  {
+    "id": "mandla-09",
+    "featureId": "IND.19.27_1",
+    "village": "Kanha Buffer",
+    "latitude": 23.2592,
+    "longitude": 79.9393,
+    "state": "madhyaPradesh",
+    "district": "mandla",
+    "claimType": "community",
+    "status": "pending",
+    "areaHectares": 5.2,
+    "submissionDate": "2024-02-19",
+    "households": 54
   }
 ]
