@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
+import MandlaClaimsMap from "../components/MandlaClaimsMap";
 
 export default function Map() {
   const [filters, setFilters] = useState({
@@ -7,14 +8,14 @@ export default function Map() {
     claimType: "all",
     dateRange: "all",
     status: "all",
-    area: "all"
+    area: "all",
   });
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -25,25 +26,24 @@ export default function Map() {
       claimType: "all",
       dateRange: "all",
       status: "all",
-      area: "all"
+      area: "all",
     });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="px-6 py-4 bg-white shadow-sm border-b">
-        <h1 className="text-2xl font-semibold text-gray-800">Forest Rights Claims Map</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">
+          Forest Rights Claims Map
+        </h1>
       </div>
 
-      {/* Main Content */}
       <div className="flex h-[calc(100vh-73px)]">
-        {/* Left Sidebar - Filters */}
         <div className="w-80 bg-white border-r overflow-y-auto">
           <div className="p-4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
-              <button 
+              <button
                 onClick={handleReset}
                 className="text-sm text-blue-600 hover:text-blue-700"
               >
@@ -51,7 +51,6 @@ export default function Map() {
               </button>
             </div>
 
-            {/* State Filter */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 State
@@ -70,7 +69,6 @@ export default function Map() {
               </select>
             </div>
 
-            {/* District Filter */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 District
@@ -82,13 +80,13 @@ export default function Map() {
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Districts</option>
+                <option value="mandla">Mandla</option>
                 <option value="gadchiroli">Gadchiroli</option>
                 <option value="chandrapur">Chandrapur</option>
                 <option value="gondia">Gondia</option>
               </select>
             </div>
 
-            {/* Claim Type Filter */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Claim Type
@@ -106,7 +104,6 @@ export default function Map() {
               </select>
             </div>
 
-            {/* Date Range Filter */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Date Range
@@ -124,7 +121,6 @@ export default function Map() {
               </select>
             </div>
 
-            {/* Status Filter */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status
@@ -143,7 +139,6 @@ export default function Map() {
               </select>
             </div>
 
-            {/* Area Range Filter */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Area Range (Hectares)
@@ -170,26 +165,9 @@ export default function Map() {
           </div>
         </div>
 
-        {/* Right Side - Map Area */}
         <div className="flex-1 bg-gray-100 p-6">
-          <div className="bg-white h-full rounded-lg shadow-sm border flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <svg 
-                className="w-16 h-16 mb-4 mx-auto text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                />
-              </svg>
-              <p className="text-xl font-medium mb-2">Map Placeholder</p>
-              <p className="text-sm">The interactive map will be displayed here</p>
-            </div>
+          <div className="bg-white h-full rounded-lg shadow-sm border overflow-hidden">
+            <MandlaClaimsMap filters={filters} />
           </div>
         </div>
       </div>
