@@ -8,9 +8,15 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import distance from "@turf/distance";
+import { point } from "@turf/helpers";
 
 const GEOJSON_URL = "/data/mandla.geojson";
 const CLAIMS_URL = "/data/mandla-claims.json";
+const NEARBY_THRESHOLD_KM = 0.3;
+const DISTANCE_OPTIONS = { units: "kilometers" };
+const FLAG_OUTSIDE = "OUTSIDE_BOUNDARY";
 
 const statusColor = {
   approved: "#16a34a",
@@ -48,6 +54,12 @@ const applyFilters = (claims, filters) => {
     if (filters.claimType !== "all" && claim.claimType !== filters.claimType) return false;
     if (filters.status !== "all" && claim.status !== filters.status) return false;
     if (filters.area !== "all" && getAreaBucket(claim.areaHectares) !== filters.area) return false;
+    if (
+      (filters.state !== "all" || filters.district !== "all") &&
+      claim.flags?.some((flag) => flag.code === FLAG_OUTSIDE)
+    ) {
+      return false;
+    }
     if (cutoff) {
       const submission = new Date(claim.submissionDate);
       if (submission < cutoff) return false;
@@ -67,6 +79,104 @@ const aggregateClaims = (claims) =>
     },
     { totalClaims: 0, approved: 0, totalArea: 0, households: 0 }
   );
+
+const sanitizeBoundaryFeatures = (boundary) => {
+  if (!boundary?.features) return [];
+  return boundary.features.filter((feature) => {
+    const geometryType = feature?.geometry?.type;
+    return geometryType === "Polygon" || geometryType === "MultiPolygon";
+  });
+};
+
+const formatDistance = (kilometers) => {
+  if (!Number.isFinite(kilometers)) return null;
+  const meters = Math.round(kilometers * 1000);
+  if (meters < 1) return "<1 m";
+  if (meters < 1000) return `${meters} m`;
+  return `${kilometers.toFixed(1)} km`;
+};
+
+const annotateClaims = (claims, boundary) => {
+  if (!Array.isArray(claims) || !claims.length) return [];
+  const boundaryFeatures = sanitizeBoundaryFeatures(boundary);
+  const turfPoints = claims.map((claim) =>
+    Number.isFinite(claim.longitude) && Number.isFinite(claim.latitude)
+      ? point([claim.longitude, claim.latitude], { id: claim.id })
+      : null
+  );
+
+  return claims.map((claim, index) => {
+    const flags = [];
+    const claimPoint = turfPoints[index];
+
+    if (!claimPoint) {
+      flags.push({
+        code: "INVALID_COORDINATES",
+        severity: "critical",
+        message: "Missing or invalid latitude/longitude values.",
+      });
+      return {
+        ...claim,
+        flags,
+        nearestNeighborKm: null,
+      };
+    }
+
+    if (
+      boundaryFeatures.length > 0 &&
+      !boundaryFeatures.some((feature) => {
+        try {
+          return booleanPointInPolygon(claimPoint, feature);
+        } catch (error) {
+          return false;
+        }
+      })
+    ) {
+      flags.push({
+        code: FLAG_OUTSIDE,
+        severity: "critical",
+        message: "Location lies outside the Mandla district boundary.",
+      });
+    }
+
+    let nearestNeighborKm = null;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < turfPoints.length; i += 1) {
+      if (i === index) continue;
+      const neighborPoint = turfPoints[i];
+      if (!neighborPoint) continue;
+      try {
+        const km = distance(claimPoint, neighborPoint, DISTANCE_OPTIONS);
+        if (km < minDistance) {
+          minDistance = km;
+        }
+      } catch (error) {
+        // ignore distance failures for malformed points
+      }
+    }
+
+    if (Number.isFinite(minDistance)) {
+      nearestNeighborKm = minDistance;
+      if (minDistance < NEARBY_THRESHOLD_KM) {
+        const proximityLabel = formatDistance(minDistance);
+        flags.push({
+          code: "CLOSE_PROXIMITY",
+          severity: "warning",
+          message: proximityLabel
+            ? `Another claim is within ${proximityLabel}.`
+            : "Another claim is extremely close by.",
+        });
+      }
+    }
+
+    return {
+      ...claim,
+      flags,
+      nearestNeighborKm,
+    };
+  });
+};
 
 const MandlaClaimsMap = ({ filters }) => {
   const [boundary, setBoundary] = useState(null);
@@ -95,9 +205,14 @@ const MandlaClaimsMap = ({ filters }) => {
       });
   }, []);
 
+  const annotatedClaims = useMemo(
+    () => annotateClaims(claims, boundary),
+    [claims, boundary]
+  );
+
   const filteredClaims = useMemo(
-    () => applyFilters(claims, filters),
-    [claims, filters]
+    () => applyFilters(annotatedClaims, filters),
+    [annotatedClaims, filters]
   );
 
   const totals = useMemo(
@@ -162,17 +277,20 @@ const MandlaClaimsMap = ({ filters }) => {
       <GeoJSON data={boundary} style={geoJsonStyle} onEachFeature={onEachFeature} />
       {filteredClaims.map((claim) => {
         const color = statusColor[claim.status] || "#0f172a";
-        const radius = Math.max(6, Math.sqrt(claim.areaHectares) * 3);
+        const hasFlags = claim.flags?.length;
+        const radius = Math.max(6, Math.sqrt(claim.areaHectares) * 3) + (hasFlags ? 2 : 0);
+        const borderColor = hasFlags ? "#f97316" : color;
         return (
           <CircleMarker
             key={claim.id}
             center={[claim.latitude, claim.longitude]}
             radius={radius}
             pathOptions={{
-              color,
+              color: borderColor,
               fillColor: color,
-              fillOpacity: 0.45,
-              weight: 1,
+              fillOpacity: hasFlags ? 0.6 : 0.45,
+              weight: hasFlags ? 2 : 1,
+              dashArray: hasFlags ? "4 2" : undefined,
             }}
           >
             <Tooltip direction="top" offset={[0, -4]}>
@@ -183,6 +301,14 @@ const MandlaClaimsMap = ({ filters }) => {
                 <br />Area: {claim.areaHectares.toFixed(1)} ha
                 <br />Households: {claim.households}
                 <br />Filed: {claim.submissionDate}
+                {claim.flags?.length ? (
+                  <div className="mt-1 text-red-600">
+                    <strong>Flags:</strong>
+                    {claim.flags.map((flag) => (
+                      <div key={`${claim.id}-${flag.code}`}>{flag.message}</div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </Tooltip>
           </CircleMarker>
