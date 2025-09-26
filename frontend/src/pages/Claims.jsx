@@ -57,7 +57,7 @@ const annotateClaims = (claims, boundary) => {
       !boundaryFeatures.some((feature) => {
         try {
           return booleanPointInPolygon(claimPoint, feature);
-        } catch (error) {
+        } catch {
           return false;
         }
       })
@@ -81,7 +81,7 @@ const annotateClaims = (claims, boundary) => {
         if (km < minDistance) {
           minDistance = km;
         }
-      } catch (error) {
+      } catch {
         // ignore distance failures for malformed points
       }
     }
